@@ -1,6 +1,7 @@
 # Thompson Sampling for Virtual Screening
 
-This repo accompanies the preprint [""](https://).
+This repo accompanies the preprint ["Enhanced Thompson Sampling by Roulette Wheel Selection for
+Screening Ultra-Large Combinatorial Libraries"](https://).
 
 ### Setting up the environment for running Thompson Sampling
 
@@ -24,8 +25,7 @@ Or try the example used in the preprint:
 Required params:
 - `evaluator_arg`: The argument to be passed to the instantiation of the evaluator (e.g. smiles string of the query
 molecule, filepath to the mol file, etc.) See the relevant `Evaluator` for more info.
-- `evaluator_class_name`: Required. The scoring function to use. Must be one of: "FPEvaluator" for 2D similarity, "
-MWEvaluator"for molecular weight, or "ROCSEvaluator". To use your own scoring function, implement a subclass of the
+- `evaluator_class_name`: Required. The scoring function to use. Must be "FPEvaluator" for 2D similarity. To use your own scoring function, implement a subclass of the
 Evaluator baseclass in evaluators.py.
 - `reaction_smarts`: Required. The SMARTS string for the reaction.
 - `num_ts_iterations`: Required. Number of iterations of Thompson Sampling to run (usually 100 - 2000).
