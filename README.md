@@ -1,9 +1,9 @@
-# Thompson Sampling for Virtual Screening
+# Enhanced Thompson Sampling for Virtual Screening
 
 This repo accompanies the preprint ["Enhanced Thompson Sampling by Roulette Wheel Selection for
 Screening Ultra-Large Combinatorial Libraries"](https://www.biorxiv.org/content/10.1101/2024.05.16.594622v1).
 
-### Setting up the environment for running Thompson Sampling
+### Setting up the environment for running Enhanced Thompson Sampling
 
 Create a new conda environment and install rdkit:
 `conda create -c conda-forge -n <your-env-name> rdkit`
