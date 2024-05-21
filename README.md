@@ -1,7 +1,7 @@
 # Thompson Sampling for Virtual Screening
 
 This repo accompanies the preprint ["Enhanced Thompson Sampling by Roulette Wheel Selection for
-Screening Ultra-Large Combinatorial Libraries"](https://).
+Screening Ultra-Large Combinatorial Libraries"](https://https://www.biorxiv.org/content/10.1101/2024.05.16.594622v1).
 
 ### Setting up the environment for running Thompson Sampling
 
