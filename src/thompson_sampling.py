@@ -74,14 +74,15 @@ class ThompsonSampler:
             selected_reagents.append(self.reagent_lists[idx][choice])
         prod = self.reaction.RunReactants([reagent.mol for reagent in selected_reagents])
         product_name = "_".join([reagent.reagent_name for reagent in selected_reagents])
-        res = -1
+        res = np.nan
         product_smiles = "FAIL"
         if prod:
             prod_mol = prod[0][0]  # RunReactants returns Tuple[Tuple[Mol]]
             Chem.SanitizeMol(prod_mol)
             product_smiles = Chem.MolToSmiles(prod_mol)
             res = self.evaluator.evaluate(prod_mol)
-            [reagent.add_score(res) for reagent in selected_reagents]
+            if np.isfinite(res):
+               [reagent.add_score(res) for reagent in selected_reagents]
         return product_smiles, product_name, res
 
     def warm_up(self, num_warmup_trials=3):
@@ -115,7 +116,8 @@ class ThompsonSampler:
         warmup_scores = []
         for p in pairs:
             _, _, score = self.evaluate(p)
-            warmup_scores.append(score)
+            if np.isfinite(score):
+               warmup_scores.append(score)
         # initialize each reagent
         prior_mean = np.mean(warmup_scores)
         prior_std = np.std(warmup_scores)
@@ -167,13 +169,14 @@ class ThompsonSampler:
             for ii, comb in enumerate(pairs):
                 ss = '_'.join(str(rr) for rr in comb)
                 if ss not in uniq:
-                    uniq[ss] = None
                     smiles, name, score = self.evaluate(comb)
-                    for idx, rdx in enumerate(comb):
-                        self.reagent_lists[idx][rdx].multiple_update()
-                    sample_efficiency = (len(out_list) + 1) / (i*num_per_cycle+ii+1) * 100                            
-                    out_list.append([score, smiles, name + '_%.1f'%sample_efficiency])
-                    n_resample = 0
+                    if np.isfinite(score):
+                       for idx, rdx in enumerate(comb):
+                           self.reagent_lists[idx][rdx].multiple_update()
+                       sample_efficiency = (len(out_list) + 1) / (i*num_per_cycle+ii+1) * 100                            
+                       out_list.append([score, smiles, name + '_%.1f'%sample_efficiency])
+                       n_resample = 0
+                       uniq[ss] = None
                 else:
                     n_resample += 1
 
