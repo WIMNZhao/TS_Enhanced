@@ -1,0 +1,33 @@
+{
+    "_comment": "reagents file and reactions smarts",
+    "reagent_file_list": [
+        "./data/aminobenzoic_ok.smi",
+        "./data/primary_amines_500.smi",
+        "./data/carboxylic_acids_500.smi"
+    ],
+    "reaction_smarts": "N[c:4][c:3]C(O)=O.[#6:1][NH2].[#6:2]C(=O)[OH]>>[C:2]c1n[c:4][c:3]c(=O)n1[C:1]",
+
+    "_comment": "TS searc parameters. Remove the line for using default parameters, e.g., nprocesses: using all CPU cores",   
+    "nprocesses": 1,
+    "num_warmup_trials": 3,
+    "num_ts_iterations": 2000,
+    "num_per_cycle": 100,
+    "_comment": "num_per_cycle shall be no less than nprocesses to benefit from multiprocessing",
+    "scaling": 1,
+    "_comment": "If a negative score is preferred, the scaling should be negative",
+    "decay": 1,
+    "stop": 100,
+    "_comment": "stop criteira if the same compound is sampled for n times on a roll",
+
+    "evaluator_class_name": "FPEvaluator",
+    "evaluator_arg": {
+        "query_smiles": "CCc1cccc2c(=O)n(C3CNC3)c([C@@H](C)N)nc12"
+    },
+    
+    "log_filename": "./results/test_logs.txt",
+    "results_filename": "./results/test.csv",
+
+    "hide_progress": false,
+    "_comment": "true for running on SLURM otherwise false. default: ture",
+    "_comment": "remove the corresponding line for any default para"
+}
