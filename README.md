@@ -12,13 +12,17 @@ Activate your environment and install the rest of the requirements:
 `conda activate <your-env-name>`
 `pip install -r requirements.txt`
 
-### How to run Thompson Sampling
-
-`python ./src/ts_main.py test.json`
-
-Or try the example used in the preprint:
+### Reproduce results in the preprint
 
 `python ./src/ts_paper.py quinazoline_fp_sim.json`
+
+### Use multiprocessing from src_multiprocess
+
+`python ./src_multiprocess/ts_main.py input.json`
+
+There is multiprocessing overhead. For very efficient scoring method such Fingerprints similarity, it took 1 minute using 1 process while it took 18 minutes using 4 processes.
+However, by adding time.sleep(0.1) to the evaluation routine, the compuational time scaled linearly with the number of processes. Therefore, for time-limiting scoring such as docking, multiprocess is preferred.
+Make a test to check if there is any benefit from multiprocessing, by setting nprocesses to 1 or 4.
 
 ### Parameters
 
@@ -38,5 +42,5 @@ Optional params:
 - `log_filename`: Optional. Log filename to save logs to. If not set, logging will be printed to stdout.
 - `scaling`: Optional. Positive if higher score is preferred; negative otherwise. +/- 1 is usually good
 - `decay`: Optional. Temperature control
-- `num_per_cycle`: Optional. e.g., 3, 10, 100
+- `num_per_cycle`: Optional. e.g., 100
 
