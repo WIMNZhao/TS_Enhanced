@@ -20,9 +20,9 @@ Activate your environment and install the rest of the requirements:
 
 `python ./src_multiprocess/ts_main.py input.json`
 
-There is multiprocessing overhead. For very efficient scoring method such Fingerprints similarity, it took 1 minute using 1 process while it took 18 minutes using 4 processes.
+Note that there is multiprocessing overhead. For a very efficient scoring method such as fingerprints similarity, it took 1 minute using 1 process while it took 18 minutes using 4 processes (num_per_cylce = 100).
 However, by adding time.sleep(0.1) to the evaluation routine, the compuational time scaled linearly with the number of processes. Therefore, for time-limiting scoring such as docking, multiprocess is preferred.
-Make a test to check if there is any benefit from multiprocessing, by setting nprocesses to 1 or 4.
+Make a test to check if there is any benefit from multiprocessing before using all CPUs on a cluster, by setting nprocesses to 1 and 4, respectively, for a comparison.
 
 ### Parameters
 
