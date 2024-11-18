@@ -12,7 +12,7 @@ from matplotlib.ticker import (MultipleLocator, FormatStrFormatter,
                                AutoMinorLocator)
 
 
-nprod = 376 * 500 * 500
+nprod = 100 * 100 * 100
 top100 = {}
 df = pd.read_csv("quinazoline_1M_90_top_100.csv")
 
