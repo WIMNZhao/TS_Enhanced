@@ -2,6 +2,7 @@ import numpy as np
 import os
 from rdkit import Chem, DataStructs
 from rdkit.Chem import AllChem
+from sqlitedict import SqliteDict
 
 try:
     from openeye import oechem
@@ -12,6 +13,27 @@ except ImportError:
     # Since openeye is a commercial software package, just pass with a warning if not available
     pass
 
+class DBEvaluator():
+    """A simple evaluator class that looks up values from a database.
+    This is primarily used for benchmarking
+    """
+    def __init__(self, input_dictionary):
+        self.db_prefix = input_dictionary['db_prefix']
+        db_filename = input_dictionary['db_filename']
+        self.ref_dict = SqliteDict(db_filename)
+
+    def __repr__(self):
+        return "DBEvalutor"
+
+    def evaluate(self, smiles):
+        res = self.ref_dict.get(f"{self.db_prefix}{smiles}")
+        #print(res)
+        if res is None:
+            return np.nan
+        else:
+            if res == -500:
+                return np.nan
+            return res
 
 class FPEvaluator:
     """An evaluator class that calculates a fingerprint Tanimoto to a reference molecule
