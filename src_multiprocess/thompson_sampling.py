@@ -82,7 +82,11 @@ class ThompsonSampler:
            prod_mol = prod[0][0]  # RunReactants returns Tuple[Tuple[Mol]]
            Chem.SanitizeMol(prod_mol)
            product_smiles = Chem.MolToSmiles(prod_mol)
-           score = self.evaluator.evaluate(prod_mol)
+           if isinstance(self.evaluator, DBEvaluator):
+              score = self.evaluator.evaluate(product_name)
+              score = float(res)
+           else:
+              score = self.evaluator.evaluate(prod_mol)
         return [product_smiles, product_name, score]
 
     def warm_up(self, num_warmup_trials=3):
