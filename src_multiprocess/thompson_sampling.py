@@ -25,7 +25,7 @@ class ThompsonSampler:
         self.T = None
         self.processes = processes
         self.hide_progress = False
-        self.fail_score = 0
+        #self.fail_score = 0
         self.logger = get_logger(__name__, filename=log_filename)
 
     def set_hide_progress(self, hide_progress: bool) -> None:
@@ -128,10 +128,10 @@ class ThompsonSampler:
                results.append(self.evaluate(p))
         # avoid multiprocessing overhead if nprocess == 1 for fast scoring method
         for r, p in zip(results,pairs):
-            if np.isnan(r[2]): r[2] = self.fail_score              
-            warmup_scores.append(r[2])
-            for idx, rdx in enumerate(p):
-                self.reagent_lists[idx][rdx].add_score(r[2])
+            if np.isfinite(r[2]):             
+               warmup_scores.append(r[2])
+               for idx, rdx in enumerate(p):
+                   self.reagent_lists[idx][rdx].add_score(r[2])
         # initialize each reagent
         prior_mean = np.mean(warmup_scores)
         prior_std = np.std(warmup_scores)
@@ -199,11 +199,10 @@ class ThompsonSampler:
                    results.append(self.evaluate(p))
             # avoid multiprocessing overhead if nprocess == 1 for fast scoring method        
             for r, p in zip(results,pairs_u):
-                out_list.append([r[2], r[0], r[1]])
-                #
-                if np.isnan(r[2]): r[2] = self.fail_score             
-                for idx, rdx in enumerate(p):
-                    self.reagent_lists[idx][rdx].single_update(r[2])                          
+                if np.isfinite(r[2]):
+                   out_list.append([r[2], r[0], r[1]])
+                   for idx, rdx in enumerate(p):
+                       self.reagent_lists[idx][rdx].single_update(r[2])                          
 
             # stop criteria check
             if n_resample == stop: 
