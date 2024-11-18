@@ -55,7 +55,7 @@ ax.yaxis.set_major_locator(MultipleLocator(20))
 ax.yaxis.set_minor_locator(MultipleLocator(10))
 ax.set_ylim(-10,110)
 ax.set_ylabel(r'recovery (%)', fontsize=14)
-
+ax.set_xlabel(r'percent of library screened (%)', fontsize=14)
 
 #==========================================================
 
