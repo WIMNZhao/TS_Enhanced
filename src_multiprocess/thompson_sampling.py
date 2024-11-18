@@ -8,6 +8,7 @@ from tqdm.auto import tqdm
 from reagent import Reagent
 from ts_logger import get_logger
 from ts_utils import read_reagents
+from evaluators import DBEvaluator
 
 
 class ThompsonSampler:
