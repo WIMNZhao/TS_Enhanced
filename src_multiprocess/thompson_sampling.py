@@ -83,7 +83,7 @@ class ThompsonSampler:
            Chem.SanitizeMol(prod_mol)
            product_smiles = Chem.MolToSmiles(prod_mol)
            score = self.evaluator.evaluate(prod_mol)
-        return product_smiles, product_name, score
+        return [product_smiles, product_name, score]
 
     def warm_up(self, num_warmup_trials=3):
         """
