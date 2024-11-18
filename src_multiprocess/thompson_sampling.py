@@ -84,7 +84,7 @@ class ThompsonSampler:
            product_smiles = Chem.MolToSmiles(prod_mol)
            if isinstance(self.evaluator, DBEvaluator):
               score = self.evaluator.evaluate(product_name)
-              score = float(res)
+              score = float(score)
            else:
               score = self.evaluator.evaluate(prod_mol)
         return [product_smiles, product_name, score]
