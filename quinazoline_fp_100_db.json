@@ -27,5 +27,9 @@
     },
    
     "log_filename": "./results/test_logs.txt",
-    "results_filename": "./results/test.csv"
+    "results_filename": "./results/test.csv",
+
+    "hide_progress": false,
+    "_comment": "true for running on SLURM otherwise false. default: ture",
+    "_comment": "remove the corresponding line for any default para"
 }
