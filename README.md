@@ -37,10 +37,10 @@ Evaluator baseclass in evaluators.py.
 smiles strings of valid reagents for that component.
 
 Optional params:
-- `num_warmup_trials`: Optional. Number of times to randomly sample each reagent in the reaction. 3 is usually sufficient
+- `num_warmup_trials`: Optional. Number of times to randomly sample each reagent in the reaction. It has a big impact on how quickly top-scored compounds can be recovered. Try 20.
 - `results_filename`: Optional. Name of the file to output results to. If None, results will not be saved to a file.
 - `log_filename`: Optional. Log filename to save logs to. If not set, logging will be printed to stdout.
 - `scaling`: Optional. Positive if higher score is preferred; negative otherwise. +/- 1 is usually good
 - `decay`: Optional. Temperature control
-- `num_per_cycle`: Optional. e.g., 100
+- `num_per_cycle`: Optional. e.g., 100. High number reduces the TS overhead. For ultra-large libraries, try a few hundreds
 
