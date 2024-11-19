@@ -169,13 +169,17 @@ class ThompsonSampler:
         out_list = []
         n_resample = 0
         ld_reached = False
+
+        rng = np.random.default_rng()
         for i in tqdm(range(0, num_ts_iterations), desc="Cycle", disable=self.hide_progress):
             matrix = []
             pairs = []
             for rg in self.reagent_lists:
-                rg_score = np.zeros(len(rg))  # Create a list of scores for each reagent
-                for reagent_idx, reagent in enumerate(rg):
-                    rg_score[reagent_idx] = math.exp(reagent.sample() / Temp)  # math.exp() is 7x faster than np.exp() on single values!
+                # updated reagent score sampling from Pat Walters
+                stds = np.array([r.posterior_std  for r in rg])
+                mu   = np.array([r.posterior_mean for r in rg])
+                rg_score = np.exp((rng.normal(size=len(rg)) * stds + mu)/Temp)
+                # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
             pairs = np.array(matrix).transpose()
