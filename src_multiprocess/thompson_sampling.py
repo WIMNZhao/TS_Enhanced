@@ -1,4 +1,4 @@
-import random
+import random, math
 from multiprocessing import Pool
 from typing import List, Optional, Tuple
 import numpy as np
@@ -175,7 +175,7 @@ class ThompsonSampler:
             for rg in self.reagent_lists:
                 rg_score = np.zeros(len(rg))  # Create a list of scores for each reagent
                 for reagent_idx, reagent in enumerate(rg):
-                    rg_score[reagent_idx] = np.exp(reagent.sample() / Temp)
+                    rg_score[reagent_idx] = math.exp(reagent.sample() / Temp)  # math.exp() is 7x faster than np.exp() on single values!
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
             pairs = np.array(matrix).transpose()
