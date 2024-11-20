@@ -25,7 +25,7 @@ class ThompsonSampler:
         self.T = None
         self.processes = processes
         self.hide_progress = False
-        #self.fail_score = 0
+        self.num_warmup = None
         self.logger = get_logger(__name__, filename=log_filename)
 
     def set_hide_progress(self, hide_progress: bool) -> None:
@@ -151,15 +151,17 @@ class ThompsonSampler:
             )
         # set Temperature
         self.T = prior_std
+        self.num_warmup = len(results)
+        return self.num_warmup
 
-    def search(self, scaling:float=1, ld:float=0.1, decay:float=1, dcycles:int=100, num_per_cycle:int=100, num_ts_iterations:int=1000, stop:int=100):
+    def search(self, scaling:float=1, ld:float=0.1, decay:float=1, dcycles:int=100, num_per_cycle:int=100, percent_of_library:float=0.001, stop:int=1000):
         """
         Run the search with roulette wheel selection 
         :param: scaling: scale the temperature; positive if maximum score is preferred negative otherwise
         :param: decay: decrease temperature every dcycles by mulitiplying the current T
         :param: dcycles: the number of cycles to decrease temperature
         :param: num_per_cycle: the number of products to make per search cycle
-        :param: num_ts_iterations: number of search iterations
+        :param: percent_of_library: percent of the library to be screened
         :param: stop: number of resamples on a roll
         :param: ld: lower bound of the temperature
         :return: a list of SMILES and scores
@@ -169,9 +171,11 @@ class ThompsonSampler:
         out_list = []
         n_resample = 0
         ld_reached = False
-
         rng = np.random.default_rng()
-        for i in tqdm(range(0, num_ts_iterations), desc="Cycle", disable=self.hide_progress):
+        nsearch = int(percent_of_library*self.num_prods - self.num_warmup)
+        count = 0
+        with tqdm(total=nsearch, bar_format='{l_bar}{bar}| {elapsed}<{remaining}, {rate_fmt}{postfix}', disable=self.hide_progress) as pbar:
+          while (len(uniq) < nsearch):
             matrix = []
             pairs = []
             for rg in self.reagent_lists:
@@ -212,17 +216,24 @@ class ThompsonSampler:
             if n_resample == stop: 
                 self.logger.info(f"Stop criteria reached with the number of resamples: {n_resample}")
                 break
-
-            if not ld_reached and i % dcycles == 0:
+            # update Temp
+            if not ld_reached and count % dcycles == 0:
                 Temp *= decay
                 if Temp < self.T * ld:
                     Temp = self.T * ld
                     ld_reached = True
-
-            if i % 100 == 0:
+            # logging
+            if count % 100 == 0:
                 if scaling > 0:
                    top_score, top_smiles, top_name = max(out_list)
                 else:
                    top_score, top_smiles, top_name = min(out_list)
-                self.logger.info(f"Iteration: {i} best score: {top_score:2f} smiles: {top_smiles} combi: {top_name}")
+                self.logger.info(f"Iteration: {count} best score: {top_score:2f} smiles: {top_smiles} combi: {top_name}")
+            # progressbar update
+            incr = len(pairs_u)
+            if pbar.n + incr > nsearch:
+               incr = nsearch - pbar.n
+            pbar.update(incr)
+            # iterations
+            count += 1
         return out_list
