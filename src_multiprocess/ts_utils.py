@@ -52,12 +52,12 @@ def read_input(json_filename: str) -> dict:
         input_data['evaluator_class'] = evaluator
     default = {
         "nprocesses": mp.cpu_count(),
-        "num_warmup_trials": 3,
-        "num_ts_iterations": 2000,
+        "num_warmup_trials": 5,
+        "percent_of_library": 0.001,
         "num_per_cycle": 100,
         "scaling": 1,
         "decay": 1,
-        "stop": 100,
+        "stop": 1000,
         "hide_progress": True
     }
     for para in default:

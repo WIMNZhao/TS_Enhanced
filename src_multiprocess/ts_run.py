@@ -10,7 +10,7 @@ def run_ts(input_dict: dict) -> None:
     :param input_dict: dictionary with input parameters
     """
     search = {
-        "num_ts_iterations": None,
+        "percent_of_library": None,
         "num_per_cycle": None,
         "scaling": None,
         "decay": None,
@@ -29,12 +29,12 @@ def run_ts(input_dict: dict) -> None:
     ts.read_reagents(input_dict["reagent_file_list"], num_to_select=None)
     ts.set_reaction(input_dict["reaction_smarts"])
     # run the warm-up phase to generate an initial set of scores for each reagent
-    ts.warm_up(input_dict["num_warmup_trials"])
+    nw = ts.warm_up(input_dict["num_warmup_trials"])
     # run the search with TS
     out_list = ts.search(**search)
 
     # output
-    total_evaluations = len(out_list)
+    total_evaluations = len(out_list) + nw
     percent_searched = total_evaluations / ts.get_num_prods() * 100
     logger.info(f"{total_evaluations} evaluations | {percent_searched:.3f}% of total")
 
