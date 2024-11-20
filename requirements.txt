@@ -5,3 +5,4 @@ tqdm>=4.65
 pillow>=9.5  # See discussion here https://github.com/python-pillow/Pillow/issues/6179#issuecomment-1673988403
 scikit-learn
 seaborn
+sqlitedict
