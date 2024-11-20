@@ -46,5 +46,5 @@ Optional params:
 - `scaling`: Optional. Default 1. Positive if higher score is preferred; negative otherwise. +/- 1 is usually good. It is used to scale the Boltzmann temperature.
 - `decay`: Optional. Default 1. Temperature control
 - `num_per_cycle`: Optional. Default 100. A high number helps reduce the TS overhead a bit.
-- `stop`: Optional. Default 100. Stop searching if a new compound has not been sampled for a specified number of consecutive attempts. 
+- `stop`: Optional. Default 1000. Stop searching if a new compound has not been sampled for a specified number of consecutive attempts. Increasing the num_warmup_trials may lead to an unexpected early stop. If so, increase it to a higher number.
 
