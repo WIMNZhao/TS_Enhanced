@@ -5,11 +5,11 @@ Screening Ultra-Large Combinatorial Libraries"](https://www.biorxiv.org/content/
 
 ### Setting up the environment for running Enhanced Thompson Sampling
 
-Create a new conda environment and install rdkit:
-`conda create -c conda-forge -n <your-env-name> rdkit`
+Create a new conda environment:
+`conda create -n ts_test python=3.11`
 
 Activate your environment and install the rest of the requirements:
-`conda activate <your-env-name>`
+`conda activate ts_test`
 `pip install -r requirements.txt`
 
 ### Reproduce Figure 3 in the preprint
@@ -22,10 +22,7 @@ Code in src is outdated and will not be maintained
 
 `python ./src_multiprocess/ts_main.py input.json`
 
-Note that there is multiprocessing overhead. For a very efficient scoring method such as fingerprints similarity, it took 1 minute using 1 process while it took 18 minutes using 4 processes (num_per_cylce = 100).
-
-However, by adding time.sleep(0.1) to the evaluation routine, the compuational time scaled linearly with the number of processes. Therefore, for time-limiting scoring such as docking, multiprocess is preferred.
-Make a test to check if there is any benefit from multiprocessing before using all CPUs on a cluster, e.g., by setting nprocesses to 1 and 4, respectively, for a comparison.
+Note that there is multiprocessing overhead. If time_for_scoring_single_compound * num_per_cycle / nprocessses > 0.1, there is likely a gain. For example, it took 34 seconds to screening 0.1% the 94M quinazoline library using 1 process (num_per_cycle = 1000). While it took 26 seconds using 2 processes. For expensive scoring (e.g., by add time.sleep(0.1) to the evaluaiton routine), it will scale linearly withe CPU cores.
 
 ### Parameters
 
@@ -40,11 +37,11 @@ smiles strings of valid reagents for that component.
 
 Optional params:
 - `percent_of_libray`: Optional. Default 0.1%. Percent of library to be screened. If 0.1% to be screened, set as 0.001 instead of 0.1 (a bit confusing).
-- `num_warmup_trials`: Optional. Default 5. Number of times to randomly sample each reagent in the reaction. It has a big impact on how quickly top-scored compounds can be recovered. Try 5/10/20.
-- `results_filename`: Optional. Name of the file to output results to. If None, results will not be saved to a file.
-- `log_filename`: Optional. Log filename to save logs to. If not set, logging will be printed to stdout.
+- `num_warmup_trials`: Optional. Default 5. Number of times to randomly sample each reagent in the reaction. It has an impact on how quickly top-scored compounds can be recovered. For the size of the largest reaction component library around a few hundreds, try 20. For a size around tens of thousands, try 5.
+- `num_per_cycle`: Optional. Default 100. size_of_largest_component_library * n with n in the range from 1 to 4. For instance, for the quinazoline library, the search with 2000 compounds per cycle significantly outperforms that with 2 compounds per cycyle. A high number could also benefit from multiprocessing a lot. 
 - `scaling`: Optional. Default 1. Positive if higher score is preferred; negative otherwise. +/- 1 is usually good. It is used to scale the Boltzmann temperature.
 - `decay`: Optional. Default 1. Temperature control
-- `num_per_cycle`: Optional. Default 100. A high number helps reduce the TS overhead a bit.
-- `stop`: Optional. Default 1000. Stop searching if a new compound has not been sampled for a specified number of consecutive attempts. Increasing the num_warmup_trials may lead to an unexpected early stop. If so, increase it to a higher number.
+- `stop`: Optional. Default 1000. Stop searching when without sampling a new compound for a specified number of consecutive attempts. Increasing the num_warmup_trials may lead to an unexpected early stop. If so, increase it to a higher number.
+- `results_filename`: Optional. Name of the file to output results to. If None, results will not be saved to a file.
+- `log_filename`: Optional. Log filename to save logs to. If not set, logging will be printed to stdout.
 
