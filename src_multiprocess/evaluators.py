@@ -19,15 +19,14 @@ class DBEvaluator():
     """
     def __init__(self, input_dictionary):
         self.db_prefix = input_dictionary['db_prefix']
-        db_filename = input_dictionary['db_filename']
-        self.ref_dict = SqliteDict(db_filename)
+        self.db_filename = input_dictionary['db_filename']
 
     def __repr__(self):
         return "DBEvalutor"
 
     def evaluate(self, smiles):
-        res = self.ref_dict.get(f"{self.db_prefix}{smiles}")
-        #print(res)
+        ref_dict = SqliteDict(self.db_filename)
+        res = ref_dict.get(f"{self.db_prefix}{smiles}")
         if res is None:
             return np.nan
         else:
@@ -101,10 +100,9 @@ class FredEvaluator:
     """An evaluator class that docks a molecule with the OEDocking Toolkit and returns the score
     """
     def __init__(self, input_dict):
-        du_file = input_dict["design_unit_file"]
-        if not os.path.isfile(du_file):
-           raise FileNotFoundError(f"{du_file} was not found or is a directory")
-        self.dock = read_design_unit(du_file)
+        self.du_file = input_dict["design_unit_file"]
+        if not os.path.isfile(self.du_file):
+           raise FileNotFoundError(f"{self.du_file} was not found or is a directory")
         self.max_confs = 50
 
     def set_max_confs(self, max_confs):
@@ -114,6 +112,7 @@ class FredEvaluator:
         self.max_confs = max_confs
 
     def evaluate(self, mol):
+        dock = read_design_unit(self.du_file)
         smi = Chem.MolToSmiles(mol)
         mc_mol = oechem.OEMol()
         oechem.OEParseSmiles(mc_mol, smi)
@@ -121,14 +120,14 @@ class FredEvaluator:
         score = np.nan
         docked_mol = oechem.OEGraphMol()
         if confs_ok:
-            ret_code = self.dock.DockMultiConformerMolecule(docked_mol, mc_mol)
+            ret_code = dock.DockMultiConformerMolecule(docked_mol, mc_mol)
         else:
             ret_code = oedocking.OEDockingReturnCode_ConformerGenError
         if ret_code == oedocking.OEDockingReturnCode_Success:
             dock_opts = oedocking.OEDockOptions()
             sd_tag = oedocking.OEDockMethodGetName(dock_opts.GetScoreMethod())
             # this is a stupid hack, I need to figure out how to do this correctly
-            oedocking.OESetSDScore(docked_mol, self.dock, sd_tag)
+            oedocking.OESetSDScore(docked_mol, dock, sd_tag)
             score = float(oechem.OEGetSDData(docked_mol, sd_tag))
         return score
 
