@@ -22,7 +22,7 @@ Code in src is outdated and will not be maintained
 
 `python ./src_multiprocess/ts_main.py input.json`
 
-Note that there is multiprocessing overhead. If time_for_scoring_single_compound * num_per_cycle / nprocessses > 0.1, there is likely a gain. For example, it took 34 seconds to screening 0.1% the 94M quinazoline library using 1 process (num_per_cycle = 1000). While it took 26 seconds using 2 processes. For expensive scoring (e.g., by add time.sleep(0.1) to the evaluaiton routine), it will scale linearly withe CPU cores.
+Note that there is a multiprocessing overhead. If time_for_scoring_single_compound * num_per_cycle / nprocessses > e.g., 0.1 s, there is a gain from multiprocessing.
 
 ### Parameters
 
