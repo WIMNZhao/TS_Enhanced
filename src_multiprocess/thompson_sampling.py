@@ -182,7 +182,7 @@ class ThompsonSampler:
                 mu   = np.array([r.posterior_mean for r in rg])
                 # Temp from sampling, i.e., normalization by std
                 rg_score = rng.normal(size=len(rg)) * stds + mu
-                rg_score = np.exp(rg_score/np.std(rg_score))
+                rg_score = np.exp(rg_score/(np.std(rg_score)*scaling))
                 # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
