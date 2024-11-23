@@ -56,7 +56,6 @@ def read_input(json_filename: str) -> dict:
         "percent_of_library": 0.001,
         "num_per_cycle": 1000,
         "scaling": 1,
-        "decay": 1,
         "stop": 1000,
         "hide_progress": True,
         "log_filename": "./logs.txt",

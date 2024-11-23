@@ -13,7 +13,6 @@ def run_ts(input_dict: dict) -> None:
         "percent_of_library": None,
         "num_per_cycle": None,
         "scaling": None,
-        "decay": None,
         "stop": None,
         "results_filename": None
     }

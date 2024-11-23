@@ -23,7 +23,6 @@ class ThompsonSampler:
         self.reaction = None
         self.evaluator = None
         self.num_prods = 0
-        self.T = None
         self.processes = processes
         self.hide_progress = False
         self.num_warmup = None
@@ -155,27 +154,21 @@ class ThompsonSampler:
             f"max={np.max(warmup_scores):0.4f}"
             )
         # set Temperature
-        self.T = prior_std
         self.num_warmup = len(results)
         return self.num_warmup
 
-    def search(self, scaling:float=1, ld:float=0.1, decay:float=1, dcycles:int=100, num_per_cycle:int=100, percent_of_library:float=0.001, stop:int=1000,results_filename="results.csv"):
+    def search(self, scaling:float=1, num_per_cycle:int=1000, percent_of_library:float=0.001, stop:int=1000,results_filename="results.csv"):
         """
         Run the search with roulette wheel selection 
         :param: scaling: scale the temperature; positive if maximum score is preferred negative otherwise
-        :param: decay: decrease temperature every dcycles by mulitiplying the current T
-        :param: dcycles: the number of cycles to decrease temperature
         :param: num_per_cycle: the number of products to make per search cycle
         :param: percent_of_library: percent of the library to be screened
         :param: stop: number of resamples on a roll
-        :param: ld: lower bound of the temperature
         :return: a list of SMILES and scores
         """
-        Temp = self.T * scaling
         uniq = {}
         out_list = []
         n_resample = 0
-        ld_reached = False
         rng = np.random.default_rng()
         nsearch = int(percent_of_library*self.num_prods - self.num_warmup)
         count = 0
@@ -187,7 +180,9 @@ class ThompsonSampler:
                 # updated reagent score sampling from Pat Walters
                 stds = np.array([r.posterior_std  for r in rg])
                 mu   = np.array([r.posterior_mean for r in rg])
-                rg_score = np.exp((rng.normal(size=len(rg)) * stds + mu)/Temp)
+                # Temp from sampling, i.e., normalization by std
+                rg_score = rng.normal(size=len(rg)) * stds + mu
+                rg_score = np.exp(rg_score/np.std(rg_score))
                 # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
@@ -223,12 +218,6 @@ class ThompsonSampler:
             if n_resample == stop: 
                 self.logger.info(f"Stop criteria reached with the number of resamples: {n_resample}")
                 break
-            # update Temp
-            if not ld_reached and count % dcycles == 0:
-                Temp *= decay
-                if Temp < self.T * ld:
-                    Temp = self.T * ld
-                    ld_reached = True
             # logging
             if count % 100 == 0:
                 if scaling > 0:
