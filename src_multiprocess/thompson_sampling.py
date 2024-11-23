@@ -2,6 +2,7 @@ import random, math
 from multiprocessing import Pool
 from typing import List, Optional, Tuple
 import numpy as np
+import pandas as pd
 from rdkit import Chem
 from rdkit.Chem import AllChem
 from tqdm.auto import tqdm
@@ -88,9 +89,9 @@ class ThompsonSampler:
               score = float(score)
            else:
               score = self.evaluator.evaluate(prod_mol)
-        return [product_smiles, product_name, score]
+        return [score, product_smiles, product_name]
 
-    def warm_up(self, num_warmup_trials=3):
+    def warm_up(self, num_warmup_trials=3, results_filename="results.csv"):
         """
         Warm-up phase by stochastic paralell pairing repeated for num_warmup_trials
         :param num_warmup_trials: number of warm-up cycles
@@ -128,10 +129,10 @@ class ThompsonSampler:
                results.append(self.evaluate(p))
         # avoid multiprocessing overhead if nprocess == 1 for fast scoring method
         for r, p in zip(results,pairs):
-            if np.isfinite(r[2]):             
-               warmup_scores.append(r[2])
+            if np.isfinite(r[0]):             
+               warmup_scores.append(r[0])
                for idx, rdx in enumerate(p):
-                   self.reagent_lists[idx][rdx].add_score(r[2])
+                   self.reagent_lists[idx][rdx].add_score(r[0])
         # initialize each reagent
         prior_mean = np.mean(warmup_scores)
         prior_std = np.std(warmup_scores)
@@ -140,6 +141,10 @@ class ThompsonSampler:
                 reagent = self.reagent_lists[i][j]
                 reagent.init_prior(prior_mean_score=prior_mean, prior_std_score=prior_std)
                 reagent.multiple_update()
+
+        # write the results to disk
+        out_df = pd.DataFrame(results, columns=["score", "SMILES", "Name"])
+        out_df.to_csv(results_filename, index=False, na_rep='nan')
         # logging
         self.logger.info(
             f"warmup score stats: "
@@ -154,7 +159,7 @@ class ThompsonSampler:
         self.num_warmup = len(results)
         return self.num_warmup
 
-    def search(self, scaling:float=1, ld:float=0.1, decay:float=1, dcycles:int=100, num_per_cycle:int=100, percent_of_library:float=0.001, stop:int=1000):
+    def search(self, scaling:float=1, ld:float=0.1, decay:float=1, dcycles:int=100, num_per_cycle:int=100, percent_of_library:float=0.001, stop:int=1000,results_filename="results.csv"):
         """
         Run the search with roulette wheel selection 
         :param: scaling: scale the temperature; positive if maximum score is preferred negative otherwise
@@ -207,11 +212,13 @@ class ThompsonSampler:
                    results.append(self.evaluate(p))
             # avoid multiprocessing overhead if nprocess == 1 for fast scoring method        
             for r, p in zip(results,pairs_u):
-                if np.isfinite(r[2]):
-                   out_list.append([r[2], r[0], r[1]])
+                if np.isfinite(r[0]):
+                   out_list.append(r)
                    for idx, rdx in enumerate(p):
-                       self.reagent_lists[idx][rdx].single_update(r[2])                          
-
+                       self.reagent_lists[idx][rdx].single_update(r[0])                          
+            # write to disk
+            out_df = pd.DataFrame(results)
+            out_df.to_csv(results_filename, mode='a', header=False, index=False, na_rep='nan')
             # stop criteria check
             if n_resample == stop: 
                 self.logger.info(f"Stop criteria reached with the number of resamples: {n_resample}")

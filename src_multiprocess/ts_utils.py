@@ -54,11 +54,13 @@ def read_input(json_filename: str) -> dict:
         "nprocesses": mp.cpu_count(),
         "num_warmup_trials": 5,
         "percent_of_library": 0.001,
-        "num_per_cycle": 100,
+        "num_per_cycle": 1000,
         "scaling": 1,
         "decay": 1,
         "stop": 1000,
-        "hide_progress": True
+        "hide_progress": True,
+        "log_filename": "./logs.txt",
+        "results_filename": "./results.csv"
     }
     for para in default:
         if para not in input_data:

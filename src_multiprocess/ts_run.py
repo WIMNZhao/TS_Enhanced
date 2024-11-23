@@ -15,11 +15,11 @@ def run_ts(input_dict: dict) -> None:
         "scaling": None,
         "decay": None,
         "stop": None,
+        "results_filename": None
     }
     for para in search:
         search[para] = input_dict[para]
 
-    result_filename = input_dict["results_filename"]
     logger = get_logger(__name__, filename=input_dict["log_filename"])
 
     # setup ts
@@ -29,20 +29,16 @@ def run_ts(input_dict: dict) -> None:
     ts.read_reagents(input_dict["reagent_file_list"], num_to_select=None)
     ts.set_reaction(input_dict["reaction_smarts"])
     # run the warm-up phase to generate an initial set of scores for each reagent
-    nw = ts.warm_up(input_dict["num_warmup_trials"])
+    nw = ts.warm_up(input_dict["num_warmup_trials"], input_dict["results_filename"])
     # run the search with TS
     out_list = ts.search(**search)
 
-    # output
+    # logging
     total_evaluations = len(out_list) + nw
     percent_searched = total_evaluations / ts.get_num_prods() * 100
     logger.info(f"{total_evaluations} evaluations | {percent_searched:.3f}% of total")
-
-    # write the results to disk
+    logger.info(f"Saved results to: " + input_dict["results_filename"])
     out_df = pd.DataFrame(out_list, columns=["score", "SMILES", "Name"])
-    if result_filename is not None:
-        out_df.to_csv(result_filename, index=False, na_rep='nan')
-        logger.info(f"Saved results to: {result_filename}")
     if not input_dict["hide_progress"]:
         if input_dict["scaling"] > 0:
            print(out_df.sort_values("score", ascending=False).drop_duplicates(subset="SMILES").head(100))    
