@@ -19,14 +19,14 @@ class DBEvaluator():
     """
     def __init__(self, input_dictionary):
         self.db_prefix = input_dictionary['db_prefix']
-        self.db_filename = input_dictionary['db_filename']
+        db_filename = input_dictionary['db_filename']
+        self.ref_dict = SqliteDict(db_filename)
 
     def __repr__(self):
         return "DBEvalutor"
 
     def evaluate(self, smiles):
-        ref_dict = SqliteDict(self.db_filename)
-        res = ref_dict.get(f"{self.db_prefix}{smiles}")
+        res = self.ref_dict.get(f"{self.db_prefix}{smiles}")
         if res is None:
             return np.nan
         else:
@@ -100,9 +100,11 @@ class FredEvaluator:
     """An evaluator class that docks a molecule with the OEDocking Toolkit and returns the score
     """
     def __init__(self, input_dict):
-        self.du_file = input_dict["design_unit_file"]
-        if not os.path.isfile(self.du_file):
-           raise FileNotFoundError(f"{self.du_file} was not found or is a directory")
+        du_file = input_dict["design_unit_file"]
+        if not os.path.isfile(du_file):
+           raise FileNotFoundError(f"{du_file} was not found or is a directory")
+        global dock
+        dock = read_design_unit(du_file)
         self.max_confs = 50
 
     def set_max_confs(self, max_confs):
@@ -112,7 +114,6 @@ class FredEvaluator:
         self.max_confs = max_confs
 
     def evaluate(self, mol):
-        dock = read_design_unit(self.du_file)
         smi = Chem.MolToSmiles(mol)
         mc_mol = oechem.OEMol()
         oechem.OEParseSmiles(mc_mol, smi)
