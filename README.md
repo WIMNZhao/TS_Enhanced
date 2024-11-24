@@ -22,7 +22,7 @@ Code in src is outdated and will not be maintained
 
 `python ./src_multiprocess/ts_main.py input.json`
 
-Note that there is a multiprocessing overhead. If time_for_scoring_single_compound * num_per_cycle / nprocessses > e.g., 0.1 s, there is a gain from multiprocessing.
+Note that there is a multiprocessing overhead. If time_for_scoring_single_compound * num_per_cycle / nprocessses > e.g., 0.1 s, there is a gain from multiprocessing. It scales linearly for docking!
 
 ### Parameters
 
@@ -38,10 +38,9 @@ smiles strings of valid reagents for that component.
 Optional params:
 - `percent_of_libray`: Optional. Default 0.1%. Percent of library to be screened. If 0.1% to be screened, set as 0.001 instead of 0.1 (a bit confusing).
 - `num_warmup_trials`: Optional. Default 5. Number of times to randomly sample each reagent in the reaction. It has an impact on how quickly top-scored compounds can be recovered. For the size of the largest reaction component library around a few hundreds, try 20. For a size around tens of thousands, try 5.
-- `num_per_cycle`: Optional. Default 100. size_of_largest_component_library * n with n in the range from 1 to 4. For instance, for the quinazoline library, the search with 2000 compounds per cycle significantly outperforms that with 2 compounds per cycyle. A high number could also benefit from multiprocessing a lot. 
+- `num_per_cycle`: Optional. Default 1000. A value that is between 10% and 20% of the size of the largest component library.
 - `scaling`: Optional. Default 1. Positive if higher score is preferred; negative otherwise. +/- 1 is usually good. It is used to scale the Boltzmann temperature.
-- `decay`: Optional. Default 1. Temperature control
 - `stop`: Optional. Default 1000. Stop searching when without sampling a new compound for a specified number of consecutive attempts. Increasing the num_warmup_trials may lead to an unexpected early stop. If so, increase it to a higher number.
-- `results_filename`: Optional. Name of the file to output results to. If None, results will not be saved to a file.
+- `results_filename`: Optional. Default "./results.csv". Name of the file to output results to.
 - `log_filename`: Optional. Log filename to save logs to. If not set, logging will be printed to stdout.
 
