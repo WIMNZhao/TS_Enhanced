@@ -37,10 +37,12 @@ smiles strings of valid reagents for that component.
 
 Optional params:
 - `percent_of_libray`: Optional. Default 0.1%. Percent of library to be screened. If 0.1% to be screened, set as 0.001 instead of 0.1 (a bit confusing).
-- `num_warmup_trials`: Optional. Default 5. Number of times to randomly sample each reagent in the reaction. It has an impact on how quickly top-scored compounds can be recovered. For the size of the largest reaction component library around a few hundreds, try 20. For a size around tens of thousands, try 5.
-- `num_per_cycle`: Optional. Default 1000. A value that is between 10% and 20% of the size of the largest component library.
-- `scaling`: Optional. Default 1. Positive if higher score is preferred; negative otherwise. +/- 1 is usually good. It is used to scale the Boltzmann temperature.
-- `stop`: Optional. Default 1000. Stop searching when without sampling a new compound for a specified number of consecutive attempts. Increasing the num_warmup_trials may lead to an unexpected early stop. If so, increase it to a higher number.
+- `num_warmup_trials`: Optional. Default 5.
+- `num_per_cycle`: Optional. Default 1000. A value that is around 10% of the size of the largest component library.
+- `scaling`: Optional. Default 1. +1 if higher score is preferred; -1 otherwise. 
+- `stop`: Optional. Default 1000. Stop searching when without sampling a new compound for a specified number of consecutive attempts.
 - `results_filename`: Optional. Default "./results.csv". Name of the file to output results to.
 - `log_filename`: Optional. Log filename to save logs to. If not set, logging will be printed to stdout.
+- `hide_progress`: Optional. Defaut true. false otherwise.
+- "nprocesses": Optional. Default to use all CPU cores. 
 
