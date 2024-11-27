@@ -44,5 +44,5 @@ Optional params:
 - `results_filename`: Optional. Default "./results.csv". Name of the file to output results to.
 - `log_filename`: Optional. Log filename to save logs to. If not set, logging will be printed to stdout.
 - `hide_progress`: Optional. Defaut true. false otherwise.
-- "nprocesses": Optional. Default to use all CPU cores. 
+- `nprocesses`: Optional. Default to use all CPU cores. 
 
