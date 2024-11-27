@@ -26,13 +26,6 @@ class Reagent:
         self.posterior_mean = prior_mean_score
         self.posterior_std = prior_std_score
 
-    def sample(self) -> float:
-        """
-        Takes a random sample from the posterior distribution of mean
-        :return: sample from the posterior distribution
-        """
-        return np.random.normal(loc=self.posterior_mean, scale=self.posterior_std)
-
     def single_update(self, observed_value: float):
         """
         Does the bayesian update of the posterior mean and standard deviation.

@@ -172,17 +172,37 @@ class ThompsonSampler:
         rng = np.random.default_rng()
         nsearch = int(percent_of_library*self.num_prods - self.num_warmup)
         count = 0
+        
+        idxs_component = range(0,len(self.reagent_lists))
+
         with tqdm(total=nsearch, bar_format='{l_bar}{bar}| {elapsed}<{remaining}, {rate_fmt}{postfix}', disable=self.hide_progress) as pbar:
           while (len(uniq) < nsearch):
             matrix = []
             pairs = []
-            for rg in self.reagent_lists:
-                # updated reagent score sampling from Pat Walters
+
+            # alternate between normal and greedy-selection adapted roulette wheel selection
+            if count % 2 == 0:
+               ttt = 6
+               idx_c = random.choice(idxs_component)
+               app_tc = True
+            else:
+               app_tc = False
+
+            for ii, rg in enumerate(self.reagent_lists):
+                # sample scores
                 stds = np.array([r.posterior_std  for r in rg])
                 mu   = np.array([r.posterior_mean for r in rg])
-                # Temp from sampling, i.e., normalization by std
                 rg_score = rng.normal(size=len(rg)) * stds + mu
-                rg_score = np.exp(rg_score/(np.std(rg_score)*scaling))
+                # apply thermal cycling; room temp is std of the sampled scores per reaction component
+                if app_tc:
+                   # increase temp for one component 
+                   if ii == idx_c:
+                      rg_score = np.exp(rg_score/(np.std(rg_score)*scaling*ttt))
+                   # decrease temp for others   
+                   else:
+                      rg_score = np.exp(rg_score/(np.std(rg_score)*scaling)*ttt)
+                else:   
+                   rg_score = np.exp(rg_score/(np.std(rg_score)*scaling))
                 # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
