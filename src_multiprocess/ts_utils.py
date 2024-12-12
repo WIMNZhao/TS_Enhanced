@@ -52,7 +52,7 @@ def read_input(json_filename: str) -> dict:
         input_data['evaluator_class'] = evaluator
     default = {
         "nprocesses": mp.cpu_count(),
-        "num_warmup_trials": 5,
+        "num_warmup_trials": 3,
         "percent_of_library": 0.001,
         "num_per_cycle": 1000,
         "scaling": 1,
@@ -64,6 +64,5 @@ def read_input(json_filename: str) -> dict:
     for para in default:
         if para not in input_data:
            input_data[para] = default[para]
-    #print(input_data)
     return input_data
 

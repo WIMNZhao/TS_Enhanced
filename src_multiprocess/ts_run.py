@@ -12,7 +12,6 @@ def run_ts(input_dict: dict) -> None:
     search = {
         "percent_of_library": None,
         "num_per_cycle": None,
-        "scaling": None,
         "stop": None,
         "results_filename": None
     }
@@ -22,7 +21,7 @@ def run_ts(input_dict: dict) -> None:
     logger = get_logger(__name__, filename=input_dict["log_filename"])
 
     # setup ts
-    ts = ThompsonSampler(input_dict["nprocesses"])
+    ts = ThompsonSampler(input_dict["nprocesses"], input_dict["scaling"])
     ts.set_hide_progress(input_dict["hide_progress"])
     ts.set_evaluator(input_dict["evaluator_class"])
     ts.read_reagents(input_dict["reagent_file_list"], num_to_select=None)

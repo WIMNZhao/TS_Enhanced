@@ -1,4 +1,4 @@
-import random, math
+import random
 from multiprocessing import Pool
 from typing import List, Optional, Tuple
 import numpy as np
@@ -13,7 +13,7 @@ from evaluators import DBEvaluator
 
 
 class ThompsonSampler:
-    def __init__(self, processes: int, log_filename: Optional[str] = None):
+    def __init__(self, processes: int, scaling: float, log_filename: Optional[str] = None):
         """
         Basic init
         :param log_filename: Optional filename to write logging to.
@@ -24,6 +24,7 @@ class ThompsonSampler:
         self.evaluator = None
         self.num_prods = 0
         self.processes = processes
+        self.scaling = scaling
         self.hide_progress = False
         self.num_warmup = None
         self.logger = get_logger(__name__, filename=log_filename)
@@ -131,7 +132,7 @@ class ThompsonSampler:
             if np.isfinite(r[0]):             
                warmup_scores.append(r[0])
                for idx, rdx in enumerate(p):
-                   self.reagent_lists[idx][rdx].add_score(r[0])
+                   self.reagent_lists[idx][rdx].add_score(r[0]*self.scaling)
         # initialize each reagent
         prior_mean = np.mean(warmup_scores)
         prior_std = np.std(warmup_scores)
@@ -157,7 +158,7 @@ class ThompsonSampler:
         self.num_warmup = len(results)
         return self.num_warmup
 
-    def search(self, scaling:float=1, num_per_cycle:int=1000, percent_of_library:float=0.001, stop:int=1000,results_filename="results.csv"):
+    def search(self, num_per_cycle:int=1000, percent_of_library:float=0.001, stop:int=1000,results_filename="results.csv"):
         """
         Run the search with roulette wheel selection 
         :param: scaling: scale the temperature; positive if maximum score is preferred negative otherwise
@@ -180,9 +181,9 @@ class ThompsonSampler:
             matrix = []
             pairs = []
 
-            # alternate between normal and greedy-selection adapted roulette wheel selection
-            if count % 2 == 0:
-               ttt = 6
+            # thermal cycling between normal and greedy-selection adapted roulette wheel selection
+            if random.uniform(0, 1) < 0.8:   
+               ttt = random.uniform(5, 7)
                idx_c = random.choice(idxs_component)
                app_tc = True
             else:
@@ -197,12 +198,12 @@ class ThompsonSampler:
                 if app_tc:
                    # increase temp for one component 
                    if ii == idx_c:
-                      rg_score = np.exp(rg_score/(np.std(rg_score)*scaling*ttt))
+                      rg_score = np.exp(rg_score/(np.std(rg_score)*ttt))
                    # decrease temp for others   
                    else:
-                      rg_score = np.exp(rg_score/(np.std(rg_score)*scaling)*ttt)
+                      rg_score = np.exp(rg_score/np.std(rg_score)*ttt)
                 else:   
-                   rg_score = np.exp(rg_score/(np.std(rg_score)*scaling))
+                   rg_score = np.exp(rg_score/np.std(rg_score))
                 # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
@@ -230,7 +231,7 @@ class ThompsonSampler:
                 if np.isfinite(r[0]):
                    out_list.append(r)
                    for idx, rdx in enumerate(p):
-                       self.reagent_lists[idx][rdx].single_update(r[0])                          
+                       self.reagent_lists[idx][rdx].single_update(r[0]*self.scaling)                          
             # write to disk
             out_df = pd.DataFrame(results)
             out_df.to_csv(results_filename, mode='a', header=False, index=False, na_rep='nan')
@@ -240,7 +241,7 @@ class ThompsonSampler:
                 break
             # logging
             if count % 100 == 0:
-                if scaling > 0:
+                if self.scaling > 0:
                    top_score, top_smiles, top_name = max(out_list)
                 else:
                    top_score, top_smiles, top_name = min(out_list)
@@ -253,3 +254,4 @@ class ThompsonSampler:
             # iterations
             count += 1
         return out_list
+

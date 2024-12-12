@@ -5,7 +5,7 @@ from datetime import timedelta
 from timeit import default_timer as timer
 from ts_utils import read_input
 from ts_run import run_ts
-from rdkit import Chem, RDLogger
+from rdkit import RDLogger
 RDLogger.DisableLog('rdApp.*')
 
 
