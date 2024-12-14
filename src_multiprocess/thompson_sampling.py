@@ -236,7 +236,7 @@ class ThompsonSampler:
             out_df = pd.DataFrame(results)
             out_df.to_csv(results_filename, mode='a', header=False, index=False, na_rep='nan')
             # stop criteria check
-            if n_resample == stop: 
+            if n_resample >= stop: 
                 self.logger.info(f"Stop criteria reached with the number of resamples: {n_resample}")
                 break
             # logging
