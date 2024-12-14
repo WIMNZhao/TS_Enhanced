@@ -183,7 +183,7 @@ class ThompsonSampler:
 
             # thermal cycling between normal and greedy-selection adapted roulette wheel selection
             if random.uniform(0, 1) < 0.8:   
-               ttt = random.uniform(5, 7)
+               ttt = random.uniform(7,9)
                idx_c = random.choice(idxs_component)
                app_tc = True
             else:
