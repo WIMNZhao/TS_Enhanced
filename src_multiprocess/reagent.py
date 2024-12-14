@@ -23,7 +23,7 @@ class Reagent:
         From the score distribution seen across all reagents during the warm up phase.
         """
         self.var_score_known = prior_std_score ** 2
-        self.posterior_mean = prior_mean_score
+        self.posterior_mean = 0 #prior_mean_score
         self.posterior_std = prior_std_score
 
     def single_update(self, observed_value: float):
