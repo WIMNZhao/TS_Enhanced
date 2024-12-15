@@ -134,7 +134,7 @@ class ThompsonSampler:
                for idx, rdx in enumerate(p):
                    self.reagent_lists[idx][rdx].add_score(r[0]*self.scaling)
         # initialize each reagent
-        prior_mean = np.mean(warmup_scores)
+        prior_mean = np.mean(warmup_scores) * self.scaling
         prior_std = np.std(warmup_scores)
         for i in range(0, len(self.reagent_lists)):
             for j in range(0, len(self.reagent_lists[i])):
@@ -182,8 +182,7 @@ class ThompsonSampler:
             pairs = []
 
             # thermal cycling between normal and greedy-selection adapted roulette wheel selection
-            if random.uniform(0, 1) < 0.8:   
-               ttt = random.uniform(7,9)
+            if random.uniform(0, 1) < 0.9:   
                idx_c = random.choice(idxs_component)
                app_tc = True
             else:
@@ -194,14 +193,10 @@ class ThompsonSampler:
                 stds = np.array([r.posterior_std  for r in rg])
                 mu   = np.array([r.posterior_mean for r in rg])
                 rg_score = rng.normal(size=len(rg)) * stds + mu
-                # apply thermal cycling; room temp is std of the sampled scores per reaction component
-                if app_tc:
-                   # increase temp for one component 
-                   if ii == idx_c:
-                      rg_score = np.exp(rg_score/(np.std(rg_score)*ttt))
-                   # decrease temp for others   
-                   else:
-                      rg_score = np.exp(rg_score/np.std(rg_score)*ttt)
+                # apply thermal cycling
+                if app_tc and ii != idx_c:
+                   # cooling down 
+                   rg_score = np.exp(rg_score/np.std(rg_score)*7)
                 else:   
                    rg_score = np.exp(rg_score/np.std(rg_score))
                 # roulette wheel selection
