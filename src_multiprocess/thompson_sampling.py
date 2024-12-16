@@ -27,6 +27,8 @@ class ThompsonSampler:
         self.scaling = scaling
         self.hide_progress = False
         self.num_warmup = None
+        self.alpha = None
+        self.beta = None
         self.logger = get_logger(__name__, filename=log_filename)
 
     def set_hide_progress(self, hide_progress: bool) -> None:
@@ -118,8 +120,9 @@ class ThompsonSampler:
                 else:
                    matrix.append(idx_r)
             pairs.extend(np.array(matrix).transpose())  
-        #
+        
         warmup_scores = []
+        # avoid multiprocessing overhead if nprocess == 1 for fast scoring method
         if self.processes >1:
            with Pool(self.processes) as pool:
                 results = pool.map(self.evaluate, pairs)
@@ -127,15 +130,23 @@ class ThompsonSampler:
            results = []
            for p in pairs:
                results.append(self.evaluate(p))
-        # avoid multiprocessing overhead if nprocess == 1 for fast scoring method
+        # initialize each reagent
         for r, p in zip(results,pairs):
             if np.isfinite(r[0]):             
                warmup_scores.append(r[0])
                for idx, rdx in enumerate(p):
                    self.reagent_lists[idx][rdx].add_score(r[0]*self.scaling)
-        # initialize each reagent
+        #
         prior_mean = np.mean(warmup_scores) * self.scaling
         prior_std = np.std(warmup_scores)
+        # empirical Temp control in thermal cycling
+        if prior_std < 0.6:    #rocs and fp
+           self.alpha = 1
+           self.beta  = 0.15
+        elif prior_std > 1.2:  #docking 
+           self.alpha = 0.2 
+           self.beta  = 0.2
+        # update
         for i in range(0, len(self.reagent_lists)):
             for j in range(0, len(self.reagent_lists[i])):
                 reagent = self.reagent_lists[i][j]
@@ -173,9 +184,11 @@ class ThompsonSampler:
         rng = np.random.default_rng()
         nsearch = int(percent_of_library*self.num_prods - self.num_warmup)
         count = 0
-        
         n_component = len(self.reagent_lists)
         idx_c = 0
+        # cutoff in sampling efficiency
+        se_cut = num_per_cycle * 0.68
+        pairs_u = []
 
         with tqdm(total=nsearch, bar_format='{l_bar}{bar}| {elapsed}<{remaining}, {rate_fmt}{postfix}', disable=self.hide_progress) as pbar:
           while (len(uniq) < nsearch):
@@ -194,10 +207,14 @@ class ThompsonSampler:
                 mu   = np.array([r.posterior_mean for r in rg])
                 rg_score = rng.normal(size=len(rg)) * stds + mu
                 # apply thermal cycling
-                if app_tc and ii != idx_c:
-                   # cooling down 
-                   rg_score = np.exp(rg_score/np.std(rg_score)*7)
-                else:   
+                if app_tc:
+                   if ii == idx_c:
+                      # heat up relative to cool-down
+                      rg_score = np.exp(rg_score/np.std(rg_score)/self.alpha)
+                   else: 
+                      # cool down 
+                      rg_score = np.exp(rg_score/np.std(rg_score)/self.beta)
+                else:  
                    rg_score = np.exp(rg_score/np.std(rg_score))
                 # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
@@ -205,7 +222,6 @@ class ThompsonSampler:
             idx_c = (idx_c + 1) % n_component    
             pairs = np.array(matrix).transpose()
 
-            pairs_u = []
             for comb in pairs:
                 ss = '_'.join(str(rr) for rr in comb)
                 if ss not in uniq:
@@ -213,8 +229,16 @@ class ThompsonSampler:
                    uniq[ss] = None
                    n_resample = 0
                 else:
-                   n_resample += 1        
-            #
+                   n_resample += 1 
+            # stop criteria check
+            if n_resample >= stop: 
+                self.logger.info(f"Stop criteria reached with the number of resamples: {n_resample}")
+                break
+            
+            # if sampling efficincy is low, keep collectiong compounds to maximize multiprocessing
+            if len(pairs_u) < se_cut and len(uniq) < nsearch: continue
+            
+            # avoid multiprocessing overhead if nprocess == 1 for fast scoring method        
             if self.processes >1:
                with Pool(self.processes) as pool:
                     results = pool.map(self.evaluate, pairs_u)
@@ -222,7 +246,7 @@ class ThompsonSampler:
                results = []
                for p in pairs_u:
                    results.append(self.evaluate(p))
-            # avoid multiprocessing overhead if nprocess == 1 for fast scoring method        
+            # update  
             for r, p in zip(results,pairs_u):
                 if np.isfinite(r[0]):
                    out_list.append(r)
@@ -231,10 +255,6 @@ class ThompsonSampler:
             # write to disk
             out_df = pd.DataFrame(results)
             out_df.to_csv(results_filename, mode='a', header=False, index=False, na_rep='nan')
-            # stop criteria check
-            if n_resample >= stop: 
-                self.logger.info(f"Stop criteria reached with the number of resamples: {n_resample}")
-                break
             # logging
             if count % 100 == 0:
                 if self.scaling > 0:
@@ -247,6 +267,8 @@ class ThompsonSampler:
             if pbar.n + incr > nsearch:
                incr = nsearch - pbar.n
             pbar.update(incr)
+            # clear pairs_u       
+            pairs_u = []
             # iterations
             count += 1
         return out_list
