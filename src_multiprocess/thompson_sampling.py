@@ -174,7 +174,8 @@ class ThompsonSampler:
         nsearch = int(percent_of_library*self.num_prods - self.num_warmup)
         count = 0
         
-        idxs_component = range(0,len(self.reagent_lists))
+        n_component = len(self.reagent_lists)
+        idx_c = 0
 
         with tqdm(total=nsearch, bar_format='{l_bar}{bar}| {elapsed}<{remaining}, {rate_fmt}{postfix}', disable=self.hide_progress) as pbar:
           while (len(uniq) < nsearch):
@@ -183,7 +184,6 @@ class ThompsonSampler:
 
             # thermal cycling between normal and greedy-selection adapted roulette wheel selection
             if random.uniform(0, 1) < 0.9:   
-               idx_c = random.choice(idxs_component)
                app_tc = True
             else:
                app_tc = False
@@ -202,6 +202,7 @@ class ThompsonSampler:
                 # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
+            idx_c = (idx_c + 1) % n_component    
             pairs = np.array(matrix).transpose()
 
             pairs_u = []
