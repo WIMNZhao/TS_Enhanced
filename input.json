@@ -16,7 +16,7 @@
     "scaling": 1,
     "_comment": "If a negative score is preferred, the scaling should be negative",
     "decay": 1,
-    "stop": 1000,
+    "stop": 3000,
     "_comment": "stop criteira if the same compound is sampled for n times on a roll",
 
     "evaluator_class_name": "FPEvaluator",
