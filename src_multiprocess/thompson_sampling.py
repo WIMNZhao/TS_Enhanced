@@ -28,7 +28,7 @@ class ThompsonSampler:
         self.hide_progress = False
         self.num_warmup = None
         self.alpha = None
-        self.beta = None
+        self.beta = 0.15
         self.logger = get_logger(__name__, filename=log_filename)
 
     def set_hide_progress(self, hide_progress: bool) -> None:
@@ -140,12 +140,17 @@ class ThompsonSampler:
         prior_mean = np.mean(warmup_scores) * self.scaling
         prior_std = np.std(warmup_scores)
         # empirical Temp control in thermal cycling
-        if prior_std < 0.6:    #rocs and fp
-           self.alpha = 1
-           self.beta  = 0.15
-        elif prior_std > 1.2:  #docking 
-           self.alpha = 0.2 
-           self.beta  = 0.2
+        if prior_std < 0.05:
+           # ugly fix for fp similarity to get the very last compound
+           self.alpha = 2.0
+        elif prior_std < 0.2:
+           # rocs
+           self.alpha = 1.2 
+        elif prior_std > 1.0:
+           #docking 
+           self.alpha = 0.2
+        # leave alpha undefined for std between 0.2 and 1.0 for unseen scenario   
+        # print(self.alpha,self.beta)   
         # update
         for i in range(0, len(self.reagent_lists)):
             for j in range(0, len(self.reagent_lists[i])):
