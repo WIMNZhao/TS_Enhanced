@@ -39,7 +39,7 @@ class Reagent:
         # The posterior variance now serve as the prior
         prior_var = self.posterior_std ** 2
         denominator = prior_var + self.var_score_known
-        # mean --> Boltzman weighted mean
+        # mean --> Boltzmann weighted average
         w = math.exp(observed_value/self.std_score_known)
         self.sum_w += w
         self.posterior_mean = self.posterior_mean + (w/self.sum_w)*(observed_value-self.posterior_mean)
@@ -55,7 +55,7 @@ class Reagent:
            n = len(self.scores_batch)
            prior_var = self.posterior_std ** 2
            denominator = n * prior_var + self.var_score_known
-           # mean --> Boltzman weighted mean
+           # mean --> Boltzmann weighted average
            scores_batch = np.array(self.scores_batch)
            w_batch = np.exp(scores_batch/self.std_score_known)
            mean_batch = np.average(scores_batch,weights=w_batch)
