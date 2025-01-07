@@ -27,8 +27,8 @@ class ThompsonSampler:
         self.scaling = scaling
         self.hide_progress = False
         self.num_warmup = None
-        self.alpha = None
-        self.beta = 0.15
+        self.alpha = 0.1
+        self.beta = self.alpha
         self.logger = get_logger(__name__, filename=log_filename)
 
     def set_hide_progress(self, hide_progress: bool) -> None:
@@ -139,18 +139,6 @@ class ThompsonSampler:
         #
         prior_mean = np.mean(warmup_scores) * self.scaling
         prior_std = np.std(warmup_scores)
-        # empirical Temp control in thermal cycling
-        if prior_std < 0.05:
-           # ugly fix for fp similarity to get the very last compound
-           self.alpha = 2.0
-        elif prior_std < 0.2:
-           # rocs
-           self.alpha = 1.2 
-        elif prior_std > 1.0:
-           #docking 
-           self.alpha = 0.2
-        # leave alpha undefined for std between 0.2 and 1.0 for unseen scenario   
-        # print(self.alpha,self.beta)   
         # update
         for i in range(0, len(self.reagent_lists)):
             for j in range(0, len(self.reagent_lists[i])):
@@ -170,14 +158,13 @@ class ThompsonSampler:
             f"min={np.min(warmup_scores):0.4f}, "
             f"max={np.max(warmup_scores):0.4f}"
             )
-        # set Temperature
+        # 
         self.num_warmup = len(results)
         return self.num_warmup
 
     def search(self, num_per_cycle:int=1000, percent_of_library:float=0.001, stop:int=1000,results_filename="results.csv"):
         """
         Run the search with roulette wheel selection 
-        :param: scaling: scale the temperature; positive if maximum score is preferred negative otherwise
         :param: num_per_cycle: the number of products to make per search cycle
         :param: percent_of_library: percent of the library to be screened
         :param: stop: number of resamples on a roll
@@ -191,8 +178,9 @@ class ThompsonSampler:
         count = 0
         n_component = len(self.reagent_lists)
         idx_c = 0
-        # cutoff in sampling efficiency
-        se_cut = num_per_cycle * 0.68
+        # cutoff in sampling efficiency for scoring and Temp controlling
+        se_cut_score = num_per_cycle * 0.68
+        se_cut_alpha = num_per_cycle * 0.1
         pairs_u = []
 
         with tqdm(total=nsearch, bar_format='{l_bar}{bar}| {elapsed}<{remaining}, {rate_fmt}{postfix}', disable=self.hide_progress) as pbar:
@@ -200,39 +188,32 @@ class ThompsonSampler:
             matrix = []
             pairs = []
 
-            # thermal cycling between normal and greedy-selection adapted roulette wheel selection
-            if random.uniform(0, 1) < 0.9:   
-               app_tc = True
-            else:
-               app_tc = False
-
             for ii, rg in enumerate(self.reagent_lists):
                 # sample scores
                 stds = np.array([r.posterior_std  for r in rg])
                 mu   = np.array([r.posterior_mean for r in rg])
                 rg_score = rng.normal(size=len(rg)) * stds + mu
                 # apply thermal cycling
-                if app_tc:
-                   if ii == idx_c:
-                      # heat up relative to cool-down
-                      rg_score = np.exp(rg_score/np.std(rg_score)/self.alpha)
-                   else: 
-                      # cool down 
-                      rg_score = np.exp(rg_score/np.std(rg_score)/self.beta)
-                else:  
-                   rg_score = np.exp(rg_score/np.std(rg_score))
+                if ii == idx_c:
+                   # heat up
+                   rg_score = np.exp(rg_score/np.std(rg_score)/self.alpha)
+                else: 
+                   # cool down 
+                   rg_score = np.exp(rg_score/np.std(rg_score)/self.beta)
                 # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
             idx_c = (idx_c + 1) % n_component    
             pairs = np.array(matrix).transpose()
 
+            n_uniq = 0
             for comb in pairs:
                 ss = '_'.join(str(rr) for rr in comb)
                 if ss not in uniq:
                    pairs_u.append(comb)
                    uniq[ss] = None
                    n_resample = 0
+                   n_uniq += 1
                 else:
                    n_resample += 1 
             # stop criteria check
@@ -240,8 +221,15 @@ class ThompsonSampler:
                 self.logger.info(f"Stop criteria reached with the number of resamples: {n_resample}")
                 break
             
-            # if sampling efficincy is low, keep collectiong compounds to maximize multiprocessing
-            if len(pairs_u) < se_cut and len(uniq) < nsearch: continue
+            if len(uniq) < nsearch: 
+                # adaptive Temp control
+                if n_uniq < se_cut_alpha:
+                   self.alpha += 0.01
+                   if n_uniq == 0:
+                      self.beta += 0.001
+                # collect enough compounds to maximize multiprocessing efficiency
+                if len(pairs_u) < se_cut_score: 
+                   continue
             
             # avoid multiprocessing overhead if nprocess == 1 for fast scoring method        
             if self.processes >1:
