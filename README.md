@@ -40,7 +40,7 @@ Optional params:
 - `num_warmup_trials`: Optional. Default 3.
 - `num_per_cycle`: Optional. Default 1000. A value that is around 100% of the size of the largest component library.
 - `scaling`: Optional. Default 1. +1 if higher score is preferred; -1 otherwise. 
-- `stop`: Optional. Default 3000. Stop searching when without sampling a new compound for a specified number of consecutive attempts.
+- `stop`: Optional. Default 6000. Stop searching when without sampling a new compound for a specified number of consecutive attempts.
 - `results_filename`: Optional. Default "./results.csv". Name of the file to output results to.
 - `log_filename`: Optional. Log filename to save logs to. If not set, logging will be printed to stdout.
 - `hide_progress`: Optional. Defaut true. false otherwise.
