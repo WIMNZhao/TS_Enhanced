@@ -15,7 +15,6 @@
     "_comment": "num_per_cycle shall be no less than nprocesses to benefit from multiprocessing",
     "scaling": 1,
     "_comment": "If a negative score is preferred, the scaling should be negative",
-    "decay": 1,
     "stop": 6000,
     "_comment": "stop criteira if no new compound is sampled for n times on a roll",
 
