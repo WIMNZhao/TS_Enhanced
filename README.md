@@ -22,7 +22,7 @@ Code in src is outdated and will not be maintained
 
 `python ./src_multiprocess/ts_main.py input.json`
 
-Note that there is a multiprocessing overhead. If time_for_scoring_single_compound * num_per_cycle / nprocessses > e.g., 0.1 s, there is a gain from multiprocessing. It scales linearly for docking!
+Note that there is a multiprocessing overhead. If time_for_scoring_single_compound * min_cpds_per_core > 0.1 s, there could be a gain from multiprocessing.
 
 ### Parameters
 
