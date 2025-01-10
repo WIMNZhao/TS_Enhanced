@@ -38,7 +38,7 @@ smiles strings of valid reagents for that component.
 Optional params:
 - `percent_of_libray`: Optional. Default 0.1%. Percent of library to be screened. If 0.1% to be screened, set as 0.001 instead of 0.1 (a bit confusing).
 - `num_warmup_trials`: Optional. Default 3.
-- `num_per_cycle`: Optional. Default 1000. A value that is around 100% of the size of the largest component library.
+- `min_cpds_per_core`: Optional. Default 50. The minimum number of compounds collected for scoring per core per iteration.
 - `scaling`: Optional. Default 1. +1 if higher score is preferred; -1 otherwise. 
 - `stop`: Optional. Default 6000. Stop searching when without sampling a new compound for a specified number of consecutive attempts.
 - `results_filename`: Optional. Default "./results.csv". Name of the file to output results to.
