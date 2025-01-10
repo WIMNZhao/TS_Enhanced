@@ -54,7 +54,7 @@ def read_input(json_filename: str) -> dict:
         "nprocesses": mp.cpu_count(),
         "num_warmup_trials": 3,
         "percent_of_library": 0.001,
-        "num_per_cycle": 1000,
+        "min_cpds_per_core": 50,
         "scaling": 1,
         "stop": 6000,
         "hide_progress": True,

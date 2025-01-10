@@ -162,10 +162,10 @@ class ThompsonSampler:
         self.num_warmup = len(results)
         return self.num_warmup
 
-    def search(self, num_per_cycle:int=1000, percent_of_library:float=0.001, stop:int=1000,results_filename="results.csv"):
+    def search(self, min_cpds_per_core:int=30, percent_of_library:float=0.001, stop:int=1000,results_filename="results.csv"):
         """
         Run the search with roulette wheel selection 
-        :param: num_per_cycle: the number of products to make per search cycle
+        :param: min_cpds_per_core: the minimum number of compounds collected for scoring per core per iteration
         :param: percent_of_library: percent of the library to be screened
         :param: stop: number of resamples on a roll
         :return: a list of SMILES and scores
@@ -178,10 +178,13 @@ class ThompsonSampler:
         count = 0
         n_component = len(self.reagent_lists)
         idx_c = 0
-        # cutoff in sampling efficiency for scoring and Temp controlling
-        se_cut_score = num_per_cycle * 0.68
-        se_cut_alpha = num_per_cycle * 0.1
         pairs_u = []
+
+        # adjust temperature when sampling efficiency falls below the threshold
+        num_per_cycle = 100
+        se_threshold_alpha = num_per_cycle * 0.1
+        # set the minimum number of compounds required for scoring in a batch mode
+        min_cpds_per_batch = self.processes * min_cpds_per_core
 
         with tqdm(total=nsearch, bar_format='{l_bar}{bar}| {elapsed}<{remaining}, {rate_fmt}{postfix}', disable=self.hide_progress) as pbar:
           while (len(uniq) < nsearch):
@@ -223,12 +226,12 @@ class ThompsonSampler:
             
             if len(uniq) < nsearch: 
                 # adaptive Temp control
-                if n_uniq < se_cut_alpha:
+                if n_uniq < se_threshold_alpha:
                    self.alpha += 0.01
                    if n_uniq == 0:
                       self.beta += 0.001
                 # collect enough compounds to maximize multiprocessing efficiency
-                if len(pairs_u) < se_cut_score: 
+                if len(pairs_u) < min_cpds_per_batch: 
                    continue
             
             # avoid multiprocessing overhead if nprocess == 1 for fast scoring method        

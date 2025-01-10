@@ -11,7 +11,7 @@ def run_ts(input_dict: dict) -> None:
     """
     search = {
         "percent_of_library": None,
-        "num_per_cycle": None,
+        "min_cpds_per_core": None,
         "stop": None,
         "results_filename": None
     }
