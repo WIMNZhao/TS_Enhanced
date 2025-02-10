@@ -199,10 +199,10 @@ class ThompsonSampler:
                 # apply thermal cycling
                 if ii == idx_c:
                    # heat up
-                   rg_score = np.exp(rg_score/np.std(rg_score)/self.alpha)
+                   rg_score = np.exp((rg_score-np.mean(rg_score))/np.std(rg_score)/self.alpha)
                 else: 
                    # cool down 
-                   rg_score = np.exp(rg_score/np.std(rg_score)/self.beta)
+                   rg_score = np.exp((rg_score-np.mean(rg_score))/np.std(rg_score)/self.beta)
                 # roulette wheel selection
                 sele = np.random.choice(len(rg),num_per_cycle,p=rg_score / np.sum(rg_score))
                 matrix.append(sele)
