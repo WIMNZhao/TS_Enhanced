@@ -41,5 +41,7 @@ def run_ts(input_dict: dict) -> None:
         if input_dict["scaling"] > 0:
            print(out_df.sort_values("score", ascending=False).drop_duplicates(subset="SMILES").head(100))    
         else:
-           print(out_df.sort_values("score", ascending=True).drop_duplicates(subset="SMILES").head(100))  
+           print(out_df.sort_values("score", ascending=True).drop_duplicates(subset="SMILES").head(100))
+    return out_df
+
     
